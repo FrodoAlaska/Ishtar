@@ -1,5 +1,4 @@
-#include <iostream>
+#include "isthar.h"
 
 int main() {
-   std::cout << "Hello, world\n"; 
 }

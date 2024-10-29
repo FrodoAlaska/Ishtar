@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/mohamed/Dev/C++/Libs/Ishtar/BEFORE -I/home/mohamed/Dev/C++/Libs/Ishtar/src
+CXX_INCLUDES = -I/home/mohamed/Dev/C++/Libs/Ishtar/BEFORE -I/home/mohamed/Dev/C++/Libs/Ishtar
 
 CXX_FLAGS = -std=gnu++20 -lm -Wall
 

@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 ### Directory variables ###
 ################################################################
 set(SRC_DIR src)
-set(INCLUDE_DIR src)
+set(INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 ################################################################
 
 ### All of the source files ###
