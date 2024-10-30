@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdio>
 
 namespace ishtar { // Start of ishtar
 
@@ -50,6 +49,9 @@ class Node {
     }
 
   public:
+    typedef void(*ForEachFn)(Node<T>* node);
+
+  public:
     T value; 
     Node<T>* next;
     Node<T>* previous;
@@ -81,7 +83,7 @@ class LinkedList {
         return;
       }
 
-      // Place as tail if there is no head 
+      // Place as tail if there is no tail 
       if(!tail) {
         node->previous = head; 
         node->next     = nullptr;
@@ -149,8 +151,8 @@ class LinkedList {
     void remove(Node<T>* node) {
       // Not a valid node in the first place.
       // And also, we _need_ the `previous` and `next` nodes 
-      // of the given node to be valid. Otherwise, it's just a `pop_front` 
-      // or `pop_back` operation.
+      // of the given node to be valid. Otherwise, it's just a `append` 
+      // or `prepend` operation.
       if(!node || !node->previous || !node->next) {
         return;
       }
@@ -232,12 +234,170 @@ class LinkedList {
       }
     }
 
+    void for_each(const Node<T>::ForEachFn& func) {
+      for(auto node = head; node != nullptr; node = node->next) {
+        func(node);
+      }
+    }
+
   public:
     Node<T>* head; 
     Node<T>* tail;
     sizei    count;
 };
 
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+/// Queue 
+template<typename T>
+class Queue {
+  public:
+    Queue() 
+      :count(0), head(nullptr), tail(nullptr)
+    {}
+  
+  public:
+    sizei count;
+    Node<T>* head;
+    Node<T>* tail;
+
+  public:
+    typedef void(*ForEachFn)(Node<T>* node);
+    
+    void push(Node<T>* node) {
+      if(!node) {
+        return;
+      }
+
+      // This is possibly the first element in the queue 
+      if(!head) {
+        head = node;
+        head->next = nullptr;
+      }
+      // Place as tail if there is no tail 
+      else if(!tail) {
+        node->next     = nullptr;
+        tail           = node; 
+        head->next     = tail;
+      }
+      // Otherwise, it's a normal node and push it to the queue 
+      else {
+        tail->next     = node;
+        node->next     = nullptr; 
+
+        // The new node is now the tail
+        tail = node;
+      }
+
+      // New node added so increase the count
+      count++;
+    }
+
+    Node<T>* pop() {
+      // There's nothing in the queue 
+      if(!head) {
+        return nullptr;
+      }
+    
+      // Relocating the head and popping the old head
+      Node<T>* old_head = head; 
+      head = head->next; 
+      
+      count--;
+
+      return old_head;
+    }
+
+    void emplace(const T& val) {
+      Node<T>* node = new Node<T>(val);
+      push(node);
+    }
+
+    void for_each(const ForEachFn& func) {
+      for(auto node = head; node != nullptr; node = node->next) {
+        func(node);
+      }
+    }
+};
+
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+/// Stack 
+template<typename T>
+class Stack {
+  public:
+    Stack() 
+      :count(0), head(nullptr), tail(nullptr)
+    {}
+  
+  public:
+    sizei count;
+    Node<T>* head;
+    Node<T>* tail;
+
+  public:
+    typedef void(*ForEachFn)(Node<T>* node);
+    
+    void push(Node<T>* node) {
+      if(!node) {
+        return;
+      }
+
+      // This is possibly the first element in the stack 
+      if(!head) {
+        head = node;
+        head->next = nullptr;
+      }
+      // Place as tail if there is no tail 
+      else if(!tail) {
+        node->next     = nullptr;
+        tail           = node; 
+        tail->previous = head;
+        head->next     = tail;
+      }
+      // Otherwise, it's a normal node and push it to the stack 
+      else {
+        tail->next     = node;
+        node->next     = nullptr; 
+        node->previous = tail;
+
+        // The new node is now the tail
+        tail = node;
+      }
+
+      // New node added so increase the count
+      count++;
+    }
+
+    Node<T>* pop() {
+      // There's nothing in the stack 
+      if(!tail) {
+        return nullptr;
+      }
+
+      count--;
+    
+      // Relocating the tail and popping the old tail
+      Node<T>* old_tail = tail; 
+      tail              = tail->previous; 
+      tail->next        = nullptr;
+
+      return old_tail;
+    }
+
+    void emplace(const T& val) {
+      Node<T>* node = new Node<T>(val);
+      push(node);
+    }
+
+    void for_each(const ForEachFn& func) {
+      for(auto node = head; node != nullptr; node = node->next) {
+        func(node);
+      }
+    }
+};
 ////////////////////////////////////////////////////////////////////
 
 } // End of ishtar

@@ -3,6 +3,10 @@
 #include <cstdio>
 #include <string>
 
+void print_node(ishtar::Node<std::string>* node) {
+  printf("%s ", node->value.c_str());
+}
+
 int main() {
   ishtar::LinkedList<std::string> list("Hello");
 
@@ -16,9 +20,7 @@ int main() {
   list.emplace_at("[SPACE]", list.head, list.head->next);
 
   // Printing the list
-  for(auto node = list.head; node != nullptr; node = node->next) {
-    printf("%s ", node->value.c_str());
-  }
+  list.for_each(print_node); 
   printf("\n");
 
   list.clear();

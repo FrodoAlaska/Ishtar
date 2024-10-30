@@ -2,12 +2,12 @@
 // @TODO
 
 # Features 
-
-# Upcoming Features
 - Linked Lists
 - Stacks 
 - Queues 
-- Trees (Binary, Quad, etc.)
-- Hash Maps 
+
+# Upcoming Features
 - Dynamic Arrays
+- Hash Maps 
+- Trees (Binary, Quad, etc.)
 - Strings 
