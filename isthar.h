@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstddef>
-
 namespace ishtar { // Start of ishtar
 
 ////////////////////////////////////////////////////////////////////
@@ -32,7 +30,7 @@ typedef unsigned int   u32;
 typedef unsigned long  u64;
 
 // size_t
-typedef size_t sizei;
+typedef u64 sizei;
 
 ////////////////////////////////////////////////////////////////////
 
@@ -161,8 +159,8 @@ class LinkedList {
       node->next->previous = node->previous;
       node->previous->next = node->next;
 
-      // A node was removed so decrease the count 
-      count--;
+      // A node was removed so decrease the count (but don't go below zero)
+      count -= count == 0 ? 0 : 1;
 
       // Some memory cleanup 
       delete node;
@@ -189,8 +187,8 @@ class LinkedList {
         return nullptr;
       }
       
-      // A node was removed so decrease the count 
-      count--;
+      // A node was removed so decrease the count (but don't go below zero)
+      count -= count == 0 ? 0 : 1;
 
       // Relocating the head
       Node<T>* old_head        = head;
@@ -206,8 +204,8 @@ class LinkedList {
         return nullptr;
       } 
       
-      // A node was removed so decrease the count 
-      count--;
+      // A node was removed so decrease the count (but don't go below zero)
+      count -= count == 0 ? 0 : 1;
 
       // Relocating the tail 
       Node<T>* old_tail        = tail; 
@@ -266,6 +264,7 @@ class Queue {
     typedef void(*ForEachFn)(Node<T>* node);
     
     void push(Node<T>* node) {
+      // The given node is invalid 
       if(!node) {
         return;
       }
@@ -299,12 +298,13 @@ class Queue {
       if(!head) {
         return nullptr;
       }
+      
+      // Don't go below zero when popping 
+      count -= count == 0 ? 0 : 1;
     
       // Relocating the head and popping the old head
       Node<T>* old_head = head; 
-      head = head->next; 
-      
-      count--;
+      head              = head->next; 
 
       return old_head;
     }
@@ -329,13 +329,12 @@ template<typename T>
 class Stack {
   public:
     Stack() 
-      :count(0), head(nullptr), tail(nullptr)
+      :count(0), head(nullptr)
     {}
   
   public:
     sizei count;
     Node<T>* head;
-    Node<T>* tail;
 
   public:
     typedef void(*ForEachFn)(Node<T>* node);
@@ -347,24 +346,13 @@ class Stack {
 
       // This is possibly the first element in the stack 
       if(!head) {
-        head = node;
+        head       = node;
         head->next = nullptr;
-      }
-      // Place as tail if there is no tail 
-      else if(!tail) {
-        node->next     = nullptr;
-        tail           = node; 
-        tail->previous = head;
-        head->next     = tail;
       }
       // Otherwise, it's a normal node and push it to the stack 
       else {
-        tail->next     = node;
-        node->next     = nullptr; 
-        node->previous = tail;
-
-        // The new node is now the tail
-        tail = node;
+        node->next = head;
+        head       = node;
       }
 
       // New node added so increase the count
@@ -373,18 +361,19 @@ class Stack {
 
     Node<T>* pop() {
       // There's nothing in the stack 
-      if(!tail) {
+      if(count == 0) {
         return nullptr;
       }
 
-      count--;
+      // Don't go below zero when popping 
+      count -= count == 0 ? 0 : 1;
     
-      // Relocating the tail and popping the old tail
-      Node<T>* old_tail = tail; 
-      tail              = tail->previous; 
-      tail->next        = nullptr;
+      // Relocating the head and popping the old head
+      Node<T>* old_head = head; 
+      head              = head->next;
+      old_head->next    = nullptr;
 
-      return old_tail;
+      return old_head;
     }
 
     void emplace(const T& val) {
@@ -397,6 +386,33 @@ class Stack {
         func(node);
       }
     }
+};
+
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+/// DynamicArray 
+template<typename T> 
+class DynamicArray {
+  public:
+    DynamicArray() 
+        :capacity(5), size(0), m_data(new T[capacity])
+      {}
+
+    DynamicArray(const sizei initial_capacity) 
+        :capacity(initial_capacity), size(0), m_data(new T[capacity])
+      {}
+
+  public:
+    sizei capacity, size;
+ 
+  private:
+    T* m_data;
+
+  public:
+    void resize(const sizei new_size);
+    void append(const T& val);
+    void clear();
 };
 ////////////////////////////////////////////////////////////////////
 

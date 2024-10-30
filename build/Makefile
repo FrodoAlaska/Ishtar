@@ -129,29 +129,29 @@ Ishtar/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Ishtar.dir/build.make CMakeFiles/Ishtar.dir/build
 .PHONY : Ishtar/fast
 
-src/main.o: src/main.cpp.o
-.PHONY : src/main.o
+examples/stack_example.o: examples/stack_example.cpp.o
+.PHONY : examples/stack_example.o
 
 # target to build an object file
-src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Ishtar.dir/build.make CMakeFiles/Ishtar.dir/src/main.cpp.o
-.PHONY : src/main.cpp.o
+examples/stack_example.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Ishtar.dir/build.make CMakeFiles/Ishtar.dir/examples/stack_example.cpp.o
+.PHONY : examples/stack_example.cpp.o
 
-src/main.i: src/main.cpp.i
-.PHONY : src/main.i
+examples/stack_example.i: examples/stack_example.cpp.i
+.PHONY : examples/stack_example.i
 
 # target to preprocess a source file
-src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Ishtar.dir/build.make CMakeFiles/Ishtar.dir/src/main.cpp.i
-.PHONY : src/main.cpp.i
+examples/stack_example.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Ishtar.dir/build.make CMakeFiles/Ishtar.dir/examples/stack_example.cpp.i
+.PHONY : examples/stack_example.cpp.i
 
-src/main.s: src/main.cpp.s
-.PHONY : src/main.s
+examples/stack_example.s: examples/stack_example.cpp.s
+.PHONY : examples/stack_example.s
 
 # target to generate assembly for a file
-src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Ishtar.dir/build.make CMakeFiles/Ishtar.dir/src/main.cpp.s
-.PHONY : src/main.cpp.s
+examples/stack_example.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Ishtar.dir/build.make CMakeFiles/Ishtar.dir/examples/stack_example.cpp.s
+.PHONY : examples/stack_example.cpp.s
 
 # Help Target
 help:
@@ -162,9 +162,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... Ishtar"
-	@echo "... src/main.o"
-	@echo "... src/main.i"
-	@echo "... src/main.s"
+	@echo "... examples/stack_example.o"
+	@echo "... examples/stack_example.i"
+	@echo "... examples/stack_example.s"
 .PHONY : help
 
 

@@ -1,1 +1,1 @@
-/usr/bin/c++ CMakeFiles/Ishtar.dir/src/main.cpp.o -o Ishtar
+/usr/bin/c++ CMakeFiles/Ishtar.dir/examples/stack_example.cpp.o -o Ishtar

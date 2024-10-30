@@ -1,8 +1,8 @@
 [
 {
   "directory": "/home/mohamed/Dev/C++/Libs/Ishtar/build",
-  "command": "/usr/bin/c++  -I/home/mohamed/Dev/C++/Libs/Ishtar/BEFORE -I/home/mohamed/Dev/C++/Libs/Ishtar -std=gnu++20 -lm -Wall -o CMakeFiles/Ishtar.dir/src/main.cpp.o -c /home/mohamed/Dev/C++/Libs/Ishtar/src/main.cpp",
-  "file": "/home/mohamed/Dev/C++/Libs/Ishtar/src/main.cpp",
-  "output": "CMakeFiles/Ishtar.dir/src/main.cpp.o"
+  "command": "/usr/bin/c++  -I/home/mohamed/Dev/C++/Libs/Ishtar/BEFORE -I/home/mohamed/Dev/C++/Libs/Ishtar -std=gnu++20 -lm -Wall -o CMakeFiles/Ishtar.dir/examples/stack_example.cpp.o -c /home/mohamed/Dev/C++/Libs/Ishtar/examples/stack_example.cpp",
+  "file": "/home/mohamed/Dev/C++/Libs/Ishtar/examples/stack_example.cpp",
+  "output": "CMakeFiles/Ishtar.dir/examples/stack_example.cpp.o"
 }
 ]
