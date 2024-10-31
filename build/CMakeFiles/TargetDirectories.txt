@@ -1,3 +1,0 @@
-/home/mohamed/Dev/C++/Libs/Ishtar/build/CMakeFiles/Ishtar.dir
-/home/mohamed/Dev/C++/Libs/Ishtar/build/CMakeFiles/edit_cache.dir
-/home/mohamed/Dev/C++/Libs/Ishtar/build/CMakeFiles/rebuild_cache.dir
