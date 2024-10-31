@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
+
 namespace ishtar { // Start of ishtar
 
 ////////////////////////////////////////////////////////////////////
@@ -181,7 +185,7 @@ class LinkedList {
       insert(node, prev, next);
     }
 
-    const Node<T>* pop_head() {
+    const Node<T>* pop_front() {
       // No head exists in the first place
       if(!head) {
         return nullptr;
@@ -198,7 +202,7 @@ class LinkedList {
       return old_head;
     }
 
-    const Node<T>* pop_tail() {
+    const Node<T>* pop_back() {
       // No tail exists in the first place
       if(!tail) {
         return nullptr;
@@ -395,24 +399,161 @@ class Stack {
 template<typename T> 
 class DynamicArray {
   public:
-    DynamicArray() 
-        :capacity(5), size(0), m_data(new T[capacity])
-      {}
+    DynamicArray() {
+      capacity = 5; 
+      size     = 0;
+      data     = (T*)malloc(sizeof(T) * capacity);
+    }
 
-    DynamicArray(const sizei initial_capacity) 
-        :capacity(initial_capacity), size(0), m_data(new T[capacity])
-      {}
+    DynamicArray(const sizei initial_capacity) {
+      capacity = initial_capacity; 
+      size     = 0;
+      data     = (T*)malloc(sizeof(T) * capacity);
+    }
+    
+    DynamicArray(T* dat, const sizei dat_size) {
+      size     = dat_size; 
+      capacity = size + (size / 2);
+      data     = dat;
+    }
 
   public:
+    T* data;
     sizei capacity, size;
- 
-  private:
-    T* m_data;
+
+  public: 
+    typedef void(*ForEachFN)(T& value);
 
   public:
-    void resize(const sizei new_size);
-    void append(const T& val);
-    void clear();
+    void reserve(const sizei new_capacity) {
+      // There's nothing to be done when the given `new_capacity` is 
+      // the _same_ as the current `capacity`
+      if(new_capacity == capacity) {
+        return;
+      }
+
+      /* 
+       * @NOTE: Keep in mind that if the given `new_capacity` is _smaller_ than
+       * the current `capacity`, the array will _shrink_ in size. Naturally.
+       * However, if the opposite is true, than the array will _bloat_ is size.
+      */
+
+      capacity = new_capacity;
+      data = (T*)realloc(data, sizeof(T) * capacity); 
+    
+      // Assert just in case the system runs out of memory 
+      assert(data != nullptr);
+    }
+
+    void resize(const sizei new_size) {
+      sizei old_size = size;
+      size += new_size;
+
+      // Grow the array by half the new size if need be
+      if(size >= capacity) {
+        reserve(capacity + (size / 2));
+      }
+
+      // We set _only_ the new elements in the array to a default value. 
+      // This way, we won't need to touch the already-existing values.
+      data = memset(data + (sizeof(T) * old_size), 0, sizeof(T) * new_size);
+    }
+
+    void append(const T& val) {
+      size++;
+
+      // Grow the array if need be
+      if(size >= capacity) {
+        reserve(capacity + (size / 2));
+      }
+
+      // Add the new value to the array
+      data[size - 1] = val;
+    }
+
+    T& pop_back() {
+      // There's nothing in the array in the first place 
+      if(size == 0) {
+        return data[size];
+      }
+
+      // We pop the element from the back and ignore it for now
+      T& element = data[size - 1];
+      size--;
+
+      return element;
+    }
+
+    T& pop_front() {
+      T& element = data[0];
+
+      // Reshuffle the entire array 
+      for(sizei i = 1; i < size; i++) {
+        data[i - 1] = data[i];
+      }
+
+      size--;
+      return element;
+    }
+
+    const T& peek_front() {
+      return data[0];
+    }
+    
+    const T& peek_back() {
+      return data[size - 1];
+    }
+
+    void remove(const sizei index) {
+      for(sizei i = index; i < size; i++) {
+        data[i] = data[i + 1]; 
+      } 
+
+      size--;
+    }
+
+    DynamicArray<T> slice(const sizei begin, const sizei end) {
+      sizei new_data_size = (end - begin) + 1; // Make sure that `end` is _inclusive_
+      T* new_data = (T*)malloc(sizeof(T) * new_data_size);
+
+      // Copying over the correct data 
+      for(sizei i = begin, j = 0; i < new_data_size || j < new_data_size; i++, j++) {
+        new_data[j] = at(i);
+      }
+
+      return DynamicArray<T>(new_data, new_data_size);
+    }
+
+    void clear() {
+      // @NOTE: This might be dangerous
+      free(data);
+
+      size     = 0; 
+      capacity = 0;
+    }
+    
+    const T& at(const sizei index) {
+      // Index out of bounds
+      assert((index >= 0 && index < size));
+
+      // Otherwise, just return the value 
+      return data[index];
+    }
+
+    void for_each(const ForEachFN& fn) {
+      for(sizei i = 0; i < size; i++) {
+        fn(data[i]);
+      }
+    }
+
+    // Operator overloading for []
+    const T& operator[](const sizei index) {
+      return at(index);
+    }
+
+    const T& operator[](const sizei index) const {
+      return at(index);
+    }
 };
 ////////////////////////////////////////////////////////////////////
 

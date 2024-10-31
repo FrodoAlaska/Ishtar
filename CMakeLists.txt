@@ -16,8 +16,7 @@ set(INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 ################################################################
 set(ISHTAR_SOURCES 
   # Core
-  # ${SRC_DIR}/main.cpp
-  examples/stack_example.cpp
+  ${SRC_DIR}/main.cpp
 )
 ################################################################
 

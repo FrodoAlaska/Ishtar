@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/mohamed/Dev/C++/Libs/Ishtar/examples/stack_example.cpp" "CMakeFiles/Ishtar.dir/examples/stack_example.cpp.o" "gcc" "CMakeFiles/Ishtar.dir/examples/stack_example.cpp.o.d"
+  "/home/mohamed/Dev/C++/Libs/Ishtar/src/main.cpp" "CMakeFiles/Ishtar.dir/src/main.cpp.o" "gcc" "CMakeFiles/Ishtar.dir/src/main.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

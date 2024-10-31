@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/Ishtar.dir/examples/stack_example.cpp.o"
-  "CMakeFiles/Ishtar.dir/examples/stack_example.cpp.o.d"
+  "CMakeFiles/Ishtar.dir/src/main.cpp.o"
+  "CMakeFiles/Ishtar.dir/src/main.cpp.o.d"
   "Ishtar"
   "Ishtar.pdb"
 )
