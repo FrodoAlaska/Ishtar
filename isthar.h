@@ -84,9 +84,13 @@ class LinkedList {
       if(!node) {
         return;
       }
-
+     
+      // Still need to make sure the head is valid 
+      if(!head) {
+        prepend(node);
+      }
       // Place as tail if there is no tail 
-      if(!tail) {
+      else if(!tail) {
         node->previous = head; 
         node->next     = nullptr;
         tail           = node; 

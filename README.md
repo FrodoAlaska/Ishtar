@@ -20,7 +20,8 @@
 # Upcoming Features
 - Hash Maps 
 - Trees (Binary, Quad, etc.)
-- Strings 
+- UTF-16 Strings 
+- Memory allocaters
 - Extensive documentation
 
 # How To Build? 
