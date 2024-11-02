@@ -79,6 +79,21 @@ class LinkedList {
     }
 
   public:
+    Node<T>* get_at(const sizei index) {
+      assert(index >= 0 && index < count);
+
+      Node<T>* node = head;
+      for(sizei i = 0; node && i < count; i++) {
+        if(i == index) {
+          return node;
+        }
+
+        node = node->next;
+      }
+
+      return nullptr;
+    }
+
     void append(Node<T>* node) {
       // Not a valid node in the first place
       if(!node) {
@@ -155,23 +170,49 @@ class LinkedList {
     }
 
     void remove(Node<T>* node) {
-      // Not a valid node in the first place.
-      // And also, we _need_ the `previous` and `next` nodes 
-      // of the given node to be valid. Otherwise, it's just a `append` 
-      // or `prepend` operation.
-      if(!node || !node->previous || !node->next) {
+      // Not a valid node in the first place or there's just nothing to remove
+      if(!node || count == 0) {
         return;
       }
-
+    
       // Relinking the nodes 
-      node->next->previous = node->previous;
-      node->previous->next = node->next;
+      if(node->next) {
+        node->next->previous = node->previous;
+      }
 
-      // A node was removed so decrease the count (but don't go below zero)
-      count -= count == 0 ? 0 : 1;
+      if(node->previous) {
+        node->previous->next = node->next;
+      }
 
       // Some memory cleanup 
       delete node;
+      
+      // A node was removed so decrease the count (but don't go below zero)
+      count -= count == 0 ? 0 : 1;
+    }
+
+    void remove_at(const sizei index) {
+      // Must be a valid index
+      assert(index >= 0 && index < count);
+    
+      // Just pop the head
+      if(index == 0) {
+        Node<T>* popped = pop_front();
+        remove(popped);
+
+        return;
+      }
+      // Just pop the tail 
+      else if(index == (count - 1)) {
+        Node<T>* popped = pop_back();
+        remove(popped);
+
+        return;
+      }
+
+      // Otherwise, just remove the node
+      Node<T>* node = get_at(index);
+      remove(node);
     }
 
     void emplace_front(const T& val) {
@@ -184,12 +225,27 @@ class LinkedList {
       append(node);
     }
 
-    void emplace_at(const T& val, Node<T>* prev, Node<T>* next) {
+    void emplace_at(const T& val, const sizei index) {
+      // Can't insert past the end 
+      assert(index >= 0 && index <= count);
+      
       Node<T>* node = new Node<T>(val);
-      insert(node, prev, next);
+
+      if(index == 0) {
+        prepend(node);
+        return;
+      }
+      else if(index == count) {
+        append(node);
+        return;
+      }
+
+      // Otherwise, find the node at `index` and insert 
+      Node<T>* curr = get_at(index);
+      insert(node, curr->previous, curr);
     }
 
-    const Node<T>* pop_front() {
+    Node<T>* pop_front() {
       // No head exists in the first place
       if(!head) {
         return nullptr;
@@ -206,7 +262,7 @@ class LinkedList {
       return old_head;
     }
 
-    const Node<T>* pop_back() {
+    Node<T>* pop_back() {
       // No tail exists in the first place
       if(!tail) {
         return nullptr;
@@ -221,6 +277,10 @@ class LinkedList {
       tail                     = old_tail->previous;
 
       return old_tail;
+    }
+
+    const T& peek_at(const sizei index) {
+      return get_at(index)->value; 
     }
     
     void clear() {
@@ -398,7 +458,22 @@ class Stack {
 
 ////////////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////////////    
+///
+
+/// BinaryTree 
+template<typename T>
+class BinaryTree {
+
+};
+/// BinaryTree
+
 ////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+///
+
 /// DynamicArray 
 template<typename T> 
 class DynamicArray {
@@ -559,6 +634,8 @@ class DynamicArray {
       return at(index);
     }
 };
+///
+
 ////////////////////////////////////////////////////////////////////
 
 } // End of ishtar
