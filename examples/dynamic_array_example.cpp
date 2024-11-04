@@ -84,6 +84,15 @@ int main() {
   arr.for_each(lam);
   printf("Remove SECTION\n\n");
   /////////////////////////////////////////
+  
+  /// Fill section
+  /////////////////////////////////////////
+  printf("FILL SECTION\n");
+  ishtar::DynamicArray<int> int_arr;
+  int_arr.fill(10, 32);
+  int_arr.for_each(lam);
+  printf("FILL SECTION\n\n");
+  /////////////////////////////////////////
 
   /// Clear section
   /////////////////////////////////////////
