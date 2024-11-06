@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <cwchar>
 
 namespace ishtar { // Start of ishtar
 
@@ -655,260 +656,250 @@ class DynamicArray {
 
 ////////////////////////////////////////////////////////////////////    
 
+/// String functions 
+template<typename T>
+const sizei string_length(const T* str) {
+  return strlen(str);
+}
+/// String functions 
+
 /// String
 template<typename T> 
 struct String {
   sizei length = 0; 
   T* data      = nullptr;
 
-  T& operator[](const sizei index) {
+  String() = default;
+
+  String(const T* str) {
+    copy(str);
+  }
+
+  String(const T* str, const sizei str_len) {
+    copy(str, str_len);
+  }
+
+  ~String() {
+    length = 0;
+
+    if(data) {
+      free(data);
+    }
+  }
+ 
+  const T& at(const sizei index) const {
     assert(index >= 0 && index < length);
     return data[index]; 
-  } 
+  }
+
+  T& operator[](const sizei index) {
+    return at(index); 
+  }
 
   const T& operator[](const sizei index) const {
-    assert(index >= 0 && index < length);
-    return data[index]; 
+    return at(index); 
   } 
+
+  void copy(const T* str, const sizei str_len) {
+    if(!str) {
+      return;
+    }
+
+    // The string's new size
+    length = str_len; 
+
+    // We don't need the old data
+    if(data) {
+      free(data);
+    }
+
+    // Make a new array
+    data = (T*)malloc(sizeof(T) * length);
+
+    // Copy the string over
+    memcpy(data, str, sizeof(T) * length);
+  }
+
+  void copy(const String<T>& str) {
+    copy(str.data, str.length);
+  }
+  
+  void copy(const T* str) {
+    copy(str, string_length(str));
+  }
+
+  const bool is_empty() {
+    return length == 0;
+  }
+
+  void append(const String<T>& other) {
+    data = (T*)realloc(data, sizeof(T) * (length + other.length));
+    memcpy(data + (sizeof(T) * length), other.data, other.length);
+
+    length += other.length;
+  }
+
+  void append(const T* other) {
+    sizei other_len = string_length(other);
+
+    data = (T*)realloc(data, length + other_len);
+    memcpy(data + (sizeof(T) * length), other, other_len);
+
+    length += other_len;
+  }
+
+  void append(const T& ch) {
+    length += 1;
+    data    = (T*)realloc(data, sizeof(T) * length);
+    data[length - 1] = ch;
+  }
+
+  void append_at(const sizei index, const T& ch) {
+    length += 1;
+    data    = (T*)realloc(data, sizeof(T) * length);
+
+    // Shift all characters to fit the new given `ch` 
+    for(sizei i = length - 1; i > index; i--) {
+      data[i] = at(i - 1); 
+    }
+
+    // Insert the new given `ch` in the empty slot
+    data[index] = ch;
+  }
+
+  String<T> slice(const sizei begin, const sizei end) {
+    sizei new_data_size = (end - begin) + 1; // Make sure that `end` is _inclusive_
+    T* new_data = (T*)malloc(sizeof(T) * new_data_size);
+
+    // Copying over the correct data 
+    for(sizei i = begin, j = 0; i < new_data_size || j < new_data_size; i++, j++) {
+      new_data[j] = at(i);
+    }
+
+    return String(new_data);
+  }
+
+  const bool compare(const String<T>& other) {
+    // Can't be the same if they are of different sizes
+    if(length != other.length) {
+      return false; 
+    }
+
+    for(sizei i = 0; i < length; i++) {
+      // Even if a _single_ character is different then the strings are _not_ the same
+      if(at(i) != other[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  void reverse() {
+    T* reversed_str = (T*)malloc(sizeof(T) * length);
+
+    for(sizei i = length - 1, j = 0; i >= 0 && j < length; i--, j++) {
+      reversed_str[j] = at(i); 
+    }
+
+    copy(reversed_str);
+    free(reversed_str);
+  }
+
+  const sizei find(const T& ch, const sizei start = 0) {
+    for(sizei i = start; i < length; i++) {
+      if(at(i) == ch) {
+        return i;
+      }
+    }
+
+    // Couldn't find the given `ch` in `str`
+    return STRING_NPOS;
+  }
+
+  const sizei find_last_of(const T& ch) {
+    for(sizei i = length - 1; i > 0; i--) {
+      if(at(i) == ch) {
+        return i;
+      }
+    } 
+
+    return STRING_NPOS;
+  }
+
+  const sizei find_first_of(const T& ch) {
+    return find(ch);
+  }
+
+  void remove(const sizei begin, const sizei end) {
+    sizei new_len = (end - begin) * sizeof(T);
+    T* temp_str = (T*)malloc(new_len);
+
+    for(sizei i = begin, j = 0; i < end && j < end; i++, j++) {
+      temp_str[j] = at(i); 
+    }
+
+    copy(temp_str, new_len);
+  }
+
+  void replace_at(const sizei index, const T& ch) {
+    data[index] = ch;
+  }
+
+  void replace(const T& ch1, const T& ch2) {
+    sizei index = 0;
+
+    for(sizei i = 0; i < length; i++) {
+      if(at(i) == ch1) {
+        index = i;
+        break;
+      }
+    }
+
+    replace_at(index, ch2);
+  }
+
+  void replace_all_of(const T& ch1, const T& ch2) {
+    for(sizei i = 0; i < length; i++) {
+      if(at(i) == ch1) {
+        replace_at(i, ch2);
+      }
+    }
+  }
+
+  const bool has(const T& ch) {
+    return find(ch) != STRING_NPOS;
+  }
+
+  const bool has_at(const sizei index, const T& ch) {
+    return data[index] == ch;
+  }
+
+  void fill(const sizei len, const T& ch) {
+    length = len;
+    data = (T*)realloc(data, sizeof(T) * length);
+
+    for(sizei i = 0; i < length; i++) {
+      data[i] = ch;
+    }
+  }
 };
 /// String
 
-/// String functions 
-template<typename T>
-const sizei string_length(const T* str) {
-  return strlen(str); 
-}
-
-template<typename T>
-const bool string_is_empty(String<T>& str) {
-  return str.length == 0;
-}
-
-template<typename T> 
-void string_copy(String<T>& str1, const T* str2, const sizei str2_len) {
-  if(!str2) {
-    return;
-  }
- 
-  // The string's new size
-  str1.length = str2_len; 
-
-  // We don't need the old data
-  if(str1.data) {
-    free(str1.data);
-  }
- 
-  // Make a new array
-  str1.data = (T*)malloc(sizeof(T) * str1.length);
-
-  // Copy the string over
-  memcpy(str1.data, str2, sizeof(T) * str1.length);
-}
-
-template<typename T> 
-void string_copy(String<T>& str1, const String<T>& str2) {
-  string_copy(str1, str2.data, str2.length);
-}
-
-template<typename T> 
-void string_copy(String<T>& str1, const T* str2) {
-  string_copy(str1, str2, string_length(str2));
-}
-
-template<typename T>
-String<T> string_create(const T* str) {
-  String<T> istr;
-  string_copy(istr, str);
-
-  return istr;
-}
-
-template<typename T> 
-void string_destroy(String<T>& str) {
-  str.length = 0;
-  
-  if(!str.data) {
-    return;
-  }
-
-  free(str.data);
-}
-
-template<typename T>
-void string_append(String<T>& str1, const String<T>& str2) {
-  str1.data = (T*)realloc(str1.data, sizeof(T) * (str1.length + str2.length));
-  memcpy(str1.data + (sizeof(T) * str1.length), str2.data, str2.length);
-
-  str1.length += str2.length;
-}
-
-template<typename T>
-void string_append(String<T>& str1, const T* str2) {
-  sizei str2_len = string_length(str2);
-
-  str1.data = (T*)realloc(str1.data, str1.length + str2_len);
-  memcpy(str1.data + (sizeof(T) * str1.length), str2, str2_len);
-
-  str1.length += str2_len;
-}
-
-template<typename T>
-void string_append(String<T>& str, const T& ch) {
-  str.length += 1;
-  str.data    = (T*)realloc(str.data, sizeof(T) * str.length);
-  str[str.length - 1] = ch;
-}
-
-template<typename T>
-void string_append_at(String<T>& str, const sizei index, const T& ch) {
-  str.length += 1;
-  str.data    = (T*)realloc(str.data, sizeof(T) * str.length);
-
-  // Shift all characters to fit the new given `ch` 
-  for(sizei i = str.length - 1; i > index; i--) {
-    str[i] = str[i - 1]; 
-  }
-
-  // Insert the new given `ch` in the empty slot
-  str[index] = ch;
-}
-
-template<typename T>
-String<T> string_slice(String<T>& str, const sizei begin, const sizei end) {
-  sizei new_data_size = (end - begin) + 1; // Make sure that `end` is _inclusive_
-  T* new_data = (T*)malloc(sizeof(T) * new_data_size);
-
-  // Copying over the correct data 
-  for(sizei i = begin, j = 0; i < new_data_size || j < new_data_size; i++, j++) {
-    new_data[j] = str[i];
-  }
-
-  return string_create(new_data);
-}
-
-template<typename T>
-const bool string_compare(const String<T>& str1, const String<T>& str2) {
-  // Can't be the same if they are of different sizes
-  if(str1.length != str2.length) {
-    return false; 
-  }
-
-  for(sizei i = 0; i < str1.length; i++) {
-    // Even if a _single_ character is different then the strings are _not_ the same
-    if(str1[i] != str2[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-template<typename T>
-void string_reverse(String<T>& str) {
-  T reversed_str[str.length - 1] = {};
-
-  for(sizei i = str.length - 1, j = 0; i >= 0 && j < str.length; i--, j++) {
-    reversed_str[j] = str[i]; 
-  }
-
-  string_copy(str, reversed_str);
-}
-
-template<typename T>
-const sizei string_find(String<T>& str, const T& ch, const sizei start = 0) {
-  for(sizei i = start; i < str.length; i++) {
-    if(str[i] == ch) {
-      return i;
-    }
-  }
-
-  // Couldn't find the given `ch` in `str`
-  return STRING_NPOS;
-}
-
-template<typename T>
-const sizei string_find_first_of(String<T>& str, const T& ch) {
-  return string_find(str, ch);
-}
-
-template<typename T>
-const sizei string_find_last_of(String<T>& str, const T& ch) {
-  for(sizei i = str.length - 1; i > 0; i--) {
-    if(str[i] == ch) {
-      return i;
-    }
-  } 
-
-  return -1;
-}
-
-template<typename T>
-void string_remove(String<T>& str, const sizei begin = 0, sizei end = STRING_NPOS) {
-  if(end == STRING_NPOS) {
-    end = str.length;
-  } 
-
-  sizei new_len = (end - begin + 1) * sizeof(T);
-  T* temp_str = (T*)malloc(new_len);
-
-  for(sizei i = begin, j = 0; i < end && j < end; i++, j++) {
-    temp_str[j] = str[i]; 
-  }
-
-  string_copy(str, temp_str, new_len);
-}
-
-template<typename T>
-void string_replace_at(String<T>& str, const sizei index, const T& ch) {
-  str[index] = ch;
-}
-
-template<typename T>
-void string_replace(String<T>& str, const T& ch1, const T& ch2) {
-  sizei index = 0;
-
-  for(sizei i = 0; i < str.length; i++) {
-    if(str[i] == ch1) {
-      index = i;
-      break;
-    }
-  }
-
-  string_replace_at(str, index, ch2);
-}
-
-template<typename T>
-void string_replace_all_of(String<T>& str, const T& ch1, const T& ch2) {
-  for(sizei i = 0; i < str.length; i++) {
-    if(str[i] == ch1) {
-      string_replace_at(str, i, ch2);
-    }
-  }
-}
-
-template<typename T>
-const bool string_has(String<T>& str, const T& ch) {
-  return string_find(str, ch) != STRING_NPOS;
-}
-
-template<typename T>
-const bool string_has_at(String<T>& str, const sizei index, const T& ch) {
-  return str[index] == ch;
-}
-
-template<typename T>
-void string_fill(String<T>& str, const sizei length, const T& ch) {
-  str.length = length;
-  str.data = (T*)realloc(str.data, sizeof(T) * length);
-
-  for(sizei i = 0; i < str.length; i++) {
-    str[i] = ch;
-  }
-}
-/// String functions 
-
 // UTF-8 String (ASCII)
 typedef String<i8> String8; 
+
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+
+/// HashTable
+template<typename K, typename V> 
+struct HashTable {
+  sizei size     = 0; 
+  sizei capacity = 0;
+};
+/// HashTable 
 
 ////////////////////////////////////////////////////////////////////
 

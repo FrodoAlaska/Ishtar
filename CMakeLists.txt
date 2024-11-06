@@ -14,15 +14,18 @@ set(INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 
 ### All of the source files ###
 ################################################################
-set(ISHTAR_SOURCES 
-  # Core
-  ${SRC_DIR}/main.cpp
+set(ISHTAR_EXAMPLES 
+  # examples/dynamic_array_example.cpp
+  # examples/list_example.cpp
+  # examples/queue_example.cpp
+  # examples/stack_example.cpp
+  examples/string_example.cpp
 )
 ################################################################
 
 ### Executable ###
 ################################################################
-add_executable(${PROJECT_NAME} ${ISHTAR_SOURCES})
+add_executable(${PROJECT_NAME} ${ISHTAR_EXAMPLES})
 ################################################################
 
 ### Adding last touches ###
