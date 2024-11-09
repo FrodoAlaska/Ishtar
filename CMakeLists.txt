@@ -8,18 +8,19 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 ### Directory variables ###
 ################################################################
-set(SRC_DIR src)
+set(EXAMPLES_DIR examples)
 set(INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 ################################################################
 
 ### All of the source files ###
 ################################################################
 set(ISHTAR_EXAMPLES 
-  # examples/dynamic_array_example.cpp
-  # examples/list_example.cpp
-  # examples/queue_example.cpp
-  # examples/stack_example.cpp
-  examples/string_example.cpp
+  # ${EXAMPLES_DIR}/dynamic_array_example.cpp
+  # ${EXAMPLES_DIR}/list_example.cpp
+  # ${EXAMPLES_DIR}/queue_example.cpp
+  # ${EXAMPLES_DIR}/stack_example.cpp
+  # ${EXAMPLES_DIR}/string_example.cpp
+  ${EXAMPLES_DIR}/hashtable_example.cpp
 )
 ################################################################
 

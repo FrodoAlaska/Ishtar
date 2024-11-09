@@ -13,14 +13,14 @@
  
 # What Does *Ishtar* Have?
 *Ishtar* supports most of the basic data structures:
--  Linked Lists
--  Stacks 
--  Queues 
--  Dynamic Arrays
--  UTF-16 Strings 
+- Linked Lists
+- Stacks 
+- Queues 
+- Dynamic Arrays
+- Strings 
+- Hash tables 
 
 # Upcoming Features
-- Hash tables 
 - Memory allocaters
 - Searching alogrithms (binary search, binary search tree, breadth-first search, depth-first search)
 - Sorting algorithms (quick sort, merge sort, bubble sort)

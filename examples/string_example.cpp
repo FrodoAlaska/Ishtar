@@ -31,7 +31,7 @@ int main() {
 
   /// Slice section
   printf("### SLICE ###\n");
-  ishtar::String8 hello_str = str1.slice(0, ishtar::string_length("hello") - 1);
+  ishtar::String8 hello_str = str1.slice(0, ishtar::String8("hello").length - 1);
   printf("%s\n", hello_str.data);
   printf("### SLICE ###\n\n");
   /// Slice section
@@ -55,7 +55,7 @@ int main() {
   /// Remove section
   printf("### REMOVE ###\n");
   ishtar::String8 incomplete_str = "None of this will be on here... except here";
-  incomplete_str.remove(ishtar::string_length("None of this will be on here... "), incomplete_str.length);
+  incomplete_str.remove(ishtar::String8("None of this will be on here... ").length, incomplete_str.length);
   printf("%s\n", incomplete_str.data);
   printf("### REMOVE ###\n\n");
   /// Remove section

@@ -48,7 +48,10 @@ typedef u64 sizei;
 
 // Underflowing a `sizei` type to get a "non position" which can indicate 
 // a string error
-#define STRING_NPOS ((sizei)-1)
+#define STRING_NPOS            ((sizei)-1)
+
+// `HashTable` uses this to determine to grow its size 
+#define HASH_TABLE_LOAD_FACTOR 0.7
 
 /// Defines 
 
@@ -620,7 +623,6 @@ class DynamicArray {
     }
 
     void clear() {
-      // @NOTE: This might be dangerous
       free(data);
 
       size     = 0; 
@@ -656,250 +658,512 @@ class DynamicArray {
 
 ////////////////////////////////////////////////////////////////////    
 
-/// String functions 
-template<typename T>
-const sizei string_length(const T* str) {
-  return strlen(str);
-}
-/// String functions 
-
 /// String
 template<typename T> 
-struct String {
-  sizei length = 0; 
-  T* data      = nullptr;
+class String {
+  public:
+    String() = default;
 
-  String() = default;
-
-  String(const T* str) {
-    copy(str);
-  }
-
-  String(const T* str, const sizei str_len) {
-    copy(str, str_len);
-  }
-
-  ~String() {
-    length = 0;
-
-    if(data) {
-      free(data);
-    }
-  }
- 
-  const T& at(const sizei index) const {
-    assert(index >= 0 && index < length);
-    return data[index]; 
-  }
-
-  T& operator[](const sizei index) {
-    return at(index); 
-  }
-
-  const T& operator[](const sizei index) const {
-    return at(index); 
-  } 
-
-  void copy(const T* str, const sizei str_len) {
-    if(!str) {
-      return;
+    String(const String& other) {
+      copy(other);
     }
 
-    // The string's new size
-    length = str_len; 
-
-    // We don't need the old data
-    if(data) {
-      free(data);
+    String(String&& other) {
+      copy(other);
     }
 
-    // Make a new array
-    data = (T*)malloc(sizeof(T) * length);
-
-    // Copy the string over
-    memcpy(data, str, sizeof(T) * length);
-  }
-
-  void copy(const String<T>& str) {
-    copy(str.data, str.length);
-  }
-  
-  void copy(const T* str) {
-    copy(str, string_length(str));
-  }
-
-  const bool is_empty() {
-    return length == 0;
-  }
-
-  void append(const String<T>& other) {
-    data = (T*)realloc(data, sizeof(T) * (length + other.length));
-    memcpy(data + (sizeof(T) * length), other.data, other.length);
-
-    length += other.length;
-  }
-
-  void append(const T* other) {
-    sizei other_len = string_length(other);
-
-    data = (T*)realloc(data, length + other_len);
-    memcpy(data + (sizeof(T) * length), other, other_len);
-
-    length += other_len;
-  }
-
-  void append(const T& ch) {
-    length += 1;
-    data    = (T*)realloc(data, sizeof(T) * length);
-    data[length - 1] = ch;
-  }
-
-  void append_at(const sizei index, const T& ch) {
-    length += 1;
-    data    = (T*)realloc(data, sizeof(T) * length);
-
-    // Shift all characters to fit the new given `ch` 
-    for(sizei i = length - 1; i > index; i--) {
-      data[i] = at(i - 1); 
+    String(const T* str) {
+      copy(str);
     }
 
-    // Insert the new given `ch` in the empty slot
-    data[index] = ch;
-  }
-
-  String<T> slice(const sizei begin, const sizei end) {
-    sizei new_data_size = (end - begin) + 1; // Make sure that `end` is _inclusive_
-    T* new_data = (T*)malloc(sizeof(T) * new_data_size);
-
-    // Copying over the correct data 
-    for(sizei i = begin, j = 0; i < new_data_size || j < new_data_size; i++, j++) {
-      new_data[j] = at(i);
+    String(const T* str, const sizei str_len) {
+      copy(str, str_len);
     }
 
-    return String(new_data);
-  }
+    ~String() {
+      length = 0;
 
-  const bool compare(const String<T>& other) {
-    // Can't be the same if they are of different sizes
-    if(length != other.length) {
-      return false; 
-    }
-
-    for(sizei i = 0; i < length; i++) {
-      // Even if a _single_ character is different then the strings are _not_ the same
-      if(at(i) != other[i]) {
-        return false;
+      if(data) {
+        free(data);
       }
     }
 
-    return true;
-  }
+  public:
+    sizei length = 0; 
+    T* data      = nullptr;
 
-  void reverse() {
-    T* reversed_str = (T*)malloc(sizeof(T) * length);
-
-    for(sizei i = length - 1, j = 0; i >= 0 && j < length; i--, j++) {
-      reversed_str[j] = at(i); 
+  public: 
+    const T& at(const sizei index) const {
+      assert(index >= 0 && index < length);
+      return data[index]; 
     }
 
-    copy(reversed_str);
-    free(reversed_str);
-  }
-
-  const sizei find(const T& ch, const sizei start = 0) {
-    for(sizei i = start; i < length; i++) {
-      if(at(i) == ch) {
-        return i;
-      }
+    T& operator[](const sizei index) {
+      return at(index); 
     }
 
-    // Couldn't find the given `ch` in `str`
-    return STRING_NPOS;
-  }
+    const T& operator[](const sizei index) const {
+      return at(index); 
+    }
 
-  const sizei find_last_of(const T& ch) {
-    for(sizei i = length - 1; i > 0; i--) {
-      if(at(i) == ch) {
-        return i;
-      }
+    String<T>& operator=(const String<T>& other) {
+      copy(other);
+      return *this;
+    } 
+    
+    const bool operator==(const String<T>& other) {
+      return compare(other);
+    } 
+    
+    const bool operator!=(const String<T>& other) {
+      return !compare(other);
     } 
 
-    return STRING_NPOS;
-  }
+    void copy(const T* str, const sizei str_len) {
+      if(!str) {
+        return;
+      }
 
-  const sizei find_first_of(const T& ch) {
-    return find(ch);
-  }
+      // The string's new size
+      length = str_len; 
 
-  void remove(const sizei begin, const sizei end) {
-    sizei new_len = (end - begin) * sizeof(T);
-    T* temp_str = (T*)malloc(new_len);
+      // We don't need the old data
+      if(data) {
+        free(data);
+      }
 
-    for(sizei i = begin, j = 0; i < end && j < end; i++, j++) {
-      temp_str[j] = at(i); 
+      // Make a new array
+      data = (T*)malloc(sizeof(T) * length);
+
+      // Copy the string over
+      memcpy(data, str, sizeof(T) * length);
     }
 
-    copy(temp_str, new_len);
-  }
+    void copy(const String<T>& str) {
+      copy(str.data, str.length);
+    }
 
-  void replace_at(const sizei index, const T& ch) {
-    data[index] = ch;
-  }
+    void copy(const T* str) {
+      copy(str, string_length(str));
+    }
 
-  void replace(const T& ch1, const T& ch2) {
-    sizei index = 0;
+    const bool is_empty() {
+      return length == 0;
+    }
 
-    for(sizei i = 0; i < length; i++) {
-      if(at(i) == ch1) {
-        index = i;
-        break;
+    void append(const String<T>& other) {
+      data = (T*)realloc(data, sizeof(T) * (length + other.length));
+      memcpy(data + (sizeof(T) * length), other.data, other.length);
+
+      length += other.length;
+    }
+
+    void append(const T* other) {
+      sizei other_len = string_length(other);
+
+      data = (T*)realloc(data, length + other_len);
+      memcpy(data + (sizeof(T) * length), other, other_len);
+
+      length += other_len;
+    }
+
+    void append(const T& ch) {
+      length += 1;
+      data    = (T*)realloc(data, sizeof(T) * length);
+      data[length - 1] = ch;
+    }
+
+    void append_at(const sizei index, const T& ch) {
+      length += 1;
+      data    = (T*)realloc(data, sizeof(T) * length);
+
+      // Shift all characters to fit the new given `ch` 
+      for(sizei i = length - 1; i > index; i--) {
+        data[i] = at(i - 1); 
+      }
+
+      // Insert the new given `ch` in the empty slot
+      data[index] = ch;
+    }
+
+    String<T> slice(const sizei begin, const sizei end) {
+      sizei new_data_size = (end - begin) + 1; // Make sure that `end` is _inclusive_
+      T* new_data = (T*)malloc(sizeof(T) * new_data_size);
+
+      // Copying over the correct data 
+      for(sizei i = begin, j = 0; i < new_data_size || j < new_data_size; i++, j++) {
+        new_data[j] = at(i);
+      }
+
+      return String(new_data);
+    }
+
+    const bool compare(const String<T>& other) {
+      // Can't be the same if they are of different sizes
+      if(length != other.length) {
+        return false; 
+      }
+
+      for(sizei i = 0; i < length; i++) {
+        // Even if a _single_ character is different then the strings are _not_ the same
+        if(at(i) != other[i]) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    void reverse() {
+      T* reversed_str = (T*)malloc(sizeof(T) * length);
+
+      for(sizei i = length - 1, j = 0; i >= 0 && j < length; i--, j++) {
+        reversed_str[j] = at(i); 
+      }
+
+      copy(reversed_str);
+      free(reversed_str);
+    }
+
+    const sizei find(const T& ch, const sizei start = 0) {
+      for(sizei i = start; i < length; i++) {
+        if(at(i) == ch) {
+          return i;
+        }
+      }
+
+      // Couldn't find the given `ch` in `str`
+      return STRING_NPOS;
+    }
+
+    const sizei find_last_of(const T& ch) {
+      for(sizei i = length - 1; i > 0; i--) {
+        if(at(i) == ch) {
+          return i;
+        }
+      } 
+
+      return STRING_NPOS;
+    }
+
+    const sizei find_first_of(const T& ch) {
+      return find(ch);
+    }
+
+    void remove(const sizei begin, const sizei end) {
+      sizei new_len = (end - begin) * sizeof(T);
+      T* temp_str = (T*)malloc(new_len);
+
+      for(sizei i = begin, j = 0; i < end && j < end; i++, j++) {
+        temp_str[j] = at(i); 
+      }
+
+      copy(temp_str, new_len);
+    }
+
+    void replace_at(const sizei index, const T& ch) {
+      data[index] = ch;
+    }
+
+    void replace(const T& ch1, const T& ch2) {
+      sizei index = 0;
+
+      for(sizei i = 0; i < length; i++) {
+        if(at(i) == ch1) {
+          index = i;
+          break;
+        }
+      }
+
+      replace_at(index, ch2);
+    }
+
+    void replace_all_of(const T& ch1, const T& ch2) {
+      for(sizei i = 0; i < length; i++) {
+        if(at(i) == ch1) {
+          replace_at(i, ch2);
+        }
       }
     }
 
-    replace_at(index, ch2);
-  }
+    const bool has(const T& ch) {
+      return find(ch) != STRING_NPOS;
+    }
 
-  void replace_all_of(const T& ch1, const T& ch2) {
-    for(sizei i = 0; i < length; i++) {
-      if(at(i) == ch1) {
-        replace_at(i, ch2);
+    const bool has_at(const sizei index, const T& ch) {
+      return data[index] == ch;
+    }
+
+    const char* c_str() const {
+      return data;
+    }
+
+    void fill(const sizei len, const T& ch) {
+      length = len;
+      data = (T*)realloc(data, sizeof(T) * length);
+
+      for(sizei i = 0; i < length; i++) {
+        data[i] = ch;
       }
     }
-  }
 
-  const bool has(const T& ch) {
-    return find(ch) != STRING_NPOS;
-  }
-
-  const bool has_at(const sizei index, const T& ch) {
-    return data[index] == ch;
-  }
-
-  void fill(const sizei len, const T& ch) {
-    length = len;
-    data = (T*)realloc(data, sizeof(T) * length);
-
-    for(sizei i = 0; i < length; i++) {
-      data[i] = ch;
-    }
-  }
+  private:
+    const sizei string_length(const char* str) {
+      return strlen(str);
+    } 
 };
 /// String
 
-// UTF-8 String (ASCII)
+// Unicode String
 typedef String<i8> String8; 
 
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
 
+// @TODO: Fix this. Put it into a .cpp file or something
+/// HashTable functions
+inline const u64 hash_key(const char* str) {
+  u32 hash  = 2166136261u;
+  sizei len = strlen(str);
+
+  for(sizei i = 0; i < len; i++) {
+    hash ^= (u8)str[i];
+    hash *= 1677719;
+  }
+
+  return hash;
+}
+
+inline const u64 hash_key(const String8& str) {
+  u32 hash  = 2166136261u;
+  sizei len = str.length;
+
+  for(sizei i = 0; i < len; i++) {
+    hash ^= (u8)str[i];
+    hash *= 1677719;
+  }
+
+  return hash;
+}
+
+template<typename K> 
+const u64 hash_key(const K& key) {
+  u32 hash = 2166136261u;
+
+  hash ^= key;
+  hash *= 1677719;
+
+  return hash;
+}
+/// HashTable functions 
+
 /// HashTable
 template<typename K, typename V> 
-struct HashTable {
-  sizei size     = 0; 
-  sizei capacity = 0;
+class HashTable {
+  public:
+    typedef void(*ForEachFn)(const K& key, V& value);
+    typedef const u64 (*HashFunc)(const K& key);
+  
+  public:
+    HashTable() 
+      :size(0), capacity(5), entries(new TableEntry*[capacity]), hash_fn(hash_key)
+    {}
+
+    HashTable(const HashTable&) = default;
+    HashTable(HashTable&&) = default;
+    
+    HashTable(const sizei initial_capacity, const HashFunc& hash_fn = hash_key) {
+      size            = 0; 
+      capacity        = initial_capacity;
+      entries         = new TableEntry*[capacity]; 
+      this->hash_fn   = hash_fn;
+    }
+
+  private:
+    struct TableEntry {
+      K key; 
+      V value; 
+      TableEntry* next = nullptr;
+      sizei index = 0;
+    };
+
+  public:
+    sizei size; 
+    sizei capacity;
+    TableEntry** entries = nullptr;
+    HashFunc hash_fn;
+
+  public:
+    void clear() {
+      if(!entries) {
+        return;
+      }
+
+      for(sizei i = 0; i < capacity; i++) {
+        while(entries[i]) {
+          TableEntry* entry = entries[i];
+          entries[i] = entry->next;
+
+          delete entry;
+        }
+      }
+      
+      size     = 0;
+      capacity = 0;
+    }
+
+    void set(const K& key, const V& value) {
+      // One more element to worry about... 
+      size++;
+
+      // Grow the table when the load factor is reached 
+      if(size >= (capacity * HASH_TABLE_LOAD_FACTOR)) {
+        grow(capacity + (size / 2));
+      }
+
+      u64 hashed_key = hash_fn(key);
+      sizei index = (hashed_key % capacity);
+
+      TableEntry* entry = entries[index];
+
+      if(!entry) {
+        entries[index] = new TableEntry{key, value, nullptr, index};
+        return;
+      }
+
+      while(entry->next) {
+        entry = entry->next;
+      }
+      
+      if(entry->key == key) {
+        entry->value = value;
+        size--;
+
+        return;
+      }
+        
+      entry->next = new TableEntry{key, value, nullptr, index};
+    }
+
+    const V& get(const K& key) {
+      TableEntry* entry = get_entry(key);
+      if(!entry) {
+        set(key, {});
+        entry = get_entry(key);
+      }
+
+      return entry->value; 
+    }
+
+    const bool has(const K& key) {
+      return get_entry(key) != nullptr;
+    }
+
+    void remove(const K& key) {
+      TableEntry* entry = get_entry(key);
+      if(!entry) {
+        return;
+      } 
+
+      size--;
+
+      entry = entries[entry->index];
+      if(entry->key == key) {
+        entries[entry->index] = entry->next;
+        delete entry;
+
+        return;
+      }
+
+      TableEntry* prev_entry = entry;
+      while(entry && entry->key != key) {
+        prev_entry = entry;
+        entry      = entry->next;
+      }
+
+      prev_entry->next = entry->next;
+      entry->next      = nullptr;
+      delete entry;
+    }
+
+    void for_each(const ForEachFn& func) {
+      for(sizei i = 0; i < capacity; i++) {
+        TableEntry* entry = entries[i];
+
+        while(entry) {
+          func(entry->key, entry->value);
+          entry = entry->next;
+        } 
+      }
+    }
+
+  private:
+    TableEntry* get_entry(const K& key) {
+      // Get the appropriate index
+      u64 hashed_key = hash_fn(key);
+      sizei index = (hashed_key % capacity);
+
+      TableEntry* entry = entries[index];
+
+      while(entry && entry->key != key) {
+        entry = entry->next;
+      }
+      
+      return entry;
+    }
+
+    void grow(const sizei cap) {
+      TableEntry** temp_entries = new TableEntry*[cap];
+      memcpy(temp_entries, entries, sizeof(TableEntry*) * capacity);
+
+      capacity = cap;
+
+      delete[] entries;
+      entries = new TableEntry*[capacity];
+      memcpy(entries, temp_entries, sizeof(TableEntry*) * capacity);
+
+      delete[] temp_entries;
+    }
 };
 /// HashTable 
+
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+
+/// Allocater functions
+typedef void*(*AllocFn)(const sizei, const sizei);
+typedef void(*FreeFn)(void*);
+
+inline void* alloc_fn(const sizei size, const sizei count) {
+  return malloc(size * count);
+} 
+
+inline void free_fn(void* ptr) {
+  free(ptr);
+}
+/// Allocater functions
+
+/// ArenaAllocater
+template<typename T> 
+class ArenaAllocater {
+  public:
+    ArenaAllocater() = default;
+    ArenaAllocater(const sizei size, const sizei count, const AllocFn& alloc = alloc_fn, const FreeFn& free = free_fn) 
+      :size(size), m_alloc(alloc), m_free(free) {
+      data = (T*)m_alloc(size, count); 
+    }
+
+  public:
+    sizei size = 0;
+    T* data    = nullptr; 
+
+  private:
+    AllocFn m_alloc;
+    FreeFn m_free;
+};
+/// ArenaAllocater 
 
 ////////////////////////////////////////////////////////////////////
 
