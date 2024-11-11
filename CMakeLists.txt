@@ -20,7 +20,8 @@ set(ISHTAR_EXAMPLES
   # ${EXAMPLES_DIR}/queue_example.cpp
   # ${EXAMPLES_DIR}/stack_example.cpp
   # ${EXAMPLES_DIR}/string_example.cpp
-  ${EXAMPLES_DIR}/hashtable_example.cpp
+  # ${EXAMPLES_DIR}/hashtable_example.cpp
+  ${EXAMPLES_DIR}/arena_alloc_example.cpp
 )
 ################################################################
 

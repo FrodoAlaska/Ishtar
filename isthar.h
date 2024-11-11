@@ -3,7 +3,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
-#include <cwchar>
 
 namespace ishtar { // Start of ishtar
 
@@ -44,6 +43,38 @@ typedef u64 sizei;
 
 ////////////////////////////////////////////////////////////////////
 
+/// Function pointers 
+
+// Function for iterating over `LinkedList`, `Queue`, and `Stack`
+template<typename T>
+using ListForEachFn = void(*)(T& value);
+
+// Function for iterating over `DynamicArray` and `String`
+template<typename T>
+using ArrayForEachFn = void(*)(T& value, const sizei index);
+
+// Function for iterating over a `HashTable`
+template<typename K, typename V>
+using TableForEachFn = void(*)(const K& key, V& value);
+
+// Hashing function prototype
+template<typename K>
+using HashFn = const u64(*)(const K& key);
+
+// Allocation function prototype 
+template<typename T>
+using AllocFn = T*(*)(const sizei count, const sizei element_size);
+
+// Free function prototype 
+template<typename T>
+using FreeFn = void(*)(T* ptr);
+
+/// Function pointers 
+
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+
 /// Defines 
 
 // Underflowing a `sizei` type to get a "non position" which can indicate 
@@ -69,9 +100,6 @@ class Node {
       this->next     = next;
       this->previous = previous;
     }
-
-  public:
-    typedef void(*ForEachFn)(Node<T>* node);
 
   public:
     T value; 
@@ -322,9 +350,13 @@ class LinkedList {
       }
     }
 
-    void for_each(const Node<T>::ForEachFn& func) {
+    void for_each(const ListForEachFn<T>& func) {
+      if(!func) {
+        return;
+      }
+
       for(auto node = head; node != nullptr; node = node->next) {
-        func(node);
+        func(node->value);
       }
     }
 
@@ -351,9 +383,6 @@ class Queue {
     sizei count;
     Node<T>* head;
     Node<T>* tail;
-
-  public:
-    typedef void(*ForEachFn)(Node<T>* node);
     
     void push(Node<T>* node) {
       // The given node is invalid 
@@ -406,9 +435,13 @@ class Queue {
       push(node);
     }
 
-    void for_each(const ForEachFn& func) {
+    void for_each(const ListForEachFn<T>& func) {
+      if(!func) {
+        return;
+      }
+
       for(auto node = head; node != nullptr; node = node->next) {
-        func(node);
+        func(node->value);
       }
     }
 };
@@ -429,9 +462,6 @@ class Stack {
   public:
     sizei count;
     Node<T>* head;
-
-  public:
-    typedef void(*ForEachFn)(Node<T>* node);
     
     void push(Node<T>* node) {
       if(!node) {
@@ -475,7 +505,11 @@ class Stack {
       push(node);
     }
 
-    void for_each(const ForEachFn& func) {
+    void for_each(const ListForEachFn<T>& func) {
+      if(!func) {
+        return;
+      }
+
       for(auto node = head; node != nullptr; node = node->next) {
         func(node);
       }
@@ -513,9 +547,6 @@ class DynamicArray {
     T* data;
     sizei capacity, size;
 
-  public: 
-    typedef void(*ForEachFN)(T& value);
-
   public:
     void reserve(const sizei new_capacity) {
       // There's nothing to be done when the given `new_capacity` is 
@@ -539,7 +570,7 @@ class DynamicArray {
 
     void resize(const sizei new_size) {
       sizei old_size = size;
-      size += new_size;
+      size = new_size;
 
       // Grow the array by half the new size if need be
       if(size >= capacity) {
@@ -637,9 +668,13 @@ class DynamicArray {
       return data[index];
     }
 
-    void for_each(const ForEachFN& fn) {
+    void for_each(const ArrayForEachFn<T>& func) {
+      if(!func) {
+        return;
+      }
+
       for(sizei i = 0; i < size; i++) {
-        fn(data[i]);
+        func(data[i], i);
       }
     }
 
@@ -907,6 +942,16 @@ class String {
       }
     }
 
+    void for_each(const ArrayForEachFn<i8>& func) {
+      if(!func) {
+        return;
+      }
+
+      for(sizei i = 0; i < length; i++) {
+        func(at(i), i);
+      }
+    }
+
   private:
     const sizei string_length(const char* str) {
       return strlen(str);
@@ -962,10 +1007,6 @@ const u64 hash_key(const K& key) {
 template<typename K, typename V> 
 class HashTable {
   public:
-    typedef void(*ForEachFn)(const K& key, V& value);
-    typedef const u64 (*HashFunc)(const K& key);
-  
-  public:
     HashTable() 
       :size(0), capacity(5), entries(new TableEntry*[capacity]), hash_fn(hash_key)
     {}
@@ -973,7 +1014,7 @@ class HashTable {
     HashTable(const HashTable&) = default;
     HashTable(HashTable&&) = default;
     
-    HashTable(const sizei initial_capacity, const HashFunc& hash_fn = hash_key) {
+    HashTable(const sizei initial_capacity, const HashFn<K>& hash_fn = hash_key) {
       size            = 0; 
       capacity        = initial_capacity;
       entries         = new TableEntry*[capacity]; 
@@ -992,7 +1033,7 @@ class HashTable {
     sizei size; 
     sizei capacity;
     TableEntry** entries = nullptr;
-    HashFunc hash_fn;
+    HashFn<K> hash_fn;
 
   public:
     void clear() {
@@ -1087,7 +1128,11 @@ class HashTable {
       delete entry;
     }
 
-    void for_each(const ForEachFn& func) {
+    void for_each(const TableForEachFn<K, V>& func) {
+      if(!func) {
+        return;
+      }
+
       for(sizei i = 0; i < capacity; i++) {
         TableEntry* entry = entries[i];
 
@@ -1132,36 +1177,29 @@ class HashTable {
 
 ////////////////////////////////////////////////////////////////////
 
-/// Allocater functions
-typedef void*(*AllocFn)(const sizei, const sizei);
-typedef void(*FreeFn)(void*);
-
-inline void* alloc_fn(const sizei size, const sizei count) {
-  return malloc(size * count);
-} 
-
-inline void free_fn(void* ptr) {
-  free(ptr);
-}
-/// Allocater functions
-
-/// ArenaAllocater
+/// ArenaAllocater 
 template<typename T> 
 class ArenaAllocater {
   public:
-    ArenaAllocater() = default;
-    ArenaAllocater(const sizei size, const sizei count, const AllocFn& alloc = alloc_fn, const FreeFn& free = free_fn) 
-      :size(size), m_alloc(alloc), m_free(free) {
-      data = (T*)m_alloc(size, count); 
-    }
+    T* buffer             = nullptr;
+    sizei allocations     = 0;
+    sizei frees           = 0;
+    AllocFn<T> alloc_func = calloc;
+    FreeFn<T> free_func   = free; 
 
   public:
-    sizei size = 0;
-    T* data    = nullptr; 
+    ArenaAllocater()                       = default;
+    ArenaAllocater(const ArenaAllocater&&) = default;
+    ArenaAllocater(ArenaAllocater&&)       = default;
 
-  private:
-    AllocFn m_alloc;
-    FreeFn m_free;
+    ArenaAllocater(const sizei count, const sizei element_size, const AllocFn<T>& alloc_fn = calloc, const FreeFn<T>& free_fn = free) {
+      alloc_func = alloc_fn; 
+      free_func  = free_fn;
+
+      allocations = count;
+
+      buffer = alloc_func(count, element_size);
+    }
 };
 /// ArenaAllocater 
 

@@ -22,6 +22,7 @@
 
 # Upcoming Features
 - Memory allocaters
+- Smart pointers
 - Searching alogrithms (binary search, binary search tree, breadth-first search, depth-first search)
 - Sorting algorithms (quick sort, merge sort, bubble sort)
 - Trees (Binary, Quad, etc.)

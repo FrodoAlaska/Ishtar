@@ -13,8 +13,8 @@ int main() {
   list.emplace_at(8, 3); 
   list.emplace_front(0); 
 
-  auto print_node = [](ishtar::Node<int>* node) {
-    printf("%i\n", node->value);
+  auto print_node = [](int& value) {
+    printf("%i\n", value);
   };
   list.for_each(print_node);
  

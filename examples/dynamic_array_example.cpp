@@ -20,7 +20,7 @@ int main() {
   arr.append(128);
   arr.append(256);
 
-  auto lam = [](int& value) {
+  auto lam = [](int& value, const ishtar::sizei index) {
     printf("%i\n", value); 
   };
   arr.for_each(lam);

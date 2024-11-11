@@ -9,8 +9,8 @@ enum EventType {
   EVENT_WINDOW_RESIZED = 64,
 };
 
-void print_node(ishtar::Node<EventType>* node) {
-  printf("EVENT = %i\n", node->value);
+void print_node(EventType& value) {
+  printf("EVENT = %i\n", value);
 }
 
 int main() {

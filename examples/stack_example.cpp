@@ -2,8 +2,8 @@
 
 #include <cstdio>
 
-void print_node(ishtar::Node<int>* node) {
-  printf("CODE = %i\n", node->value);
+void print_node(int& value) {
+  printf("CODE = %i\n", value);
 }
 
 int main() {
