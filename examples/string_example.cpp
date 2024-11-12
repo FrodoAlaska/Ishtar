@@ -1,5 +1,5 @@
 #define ISHTAR_IMPL
-#include "isthar.h"
+#include "ishtar.h"
 
 #include <cstdio>
 
