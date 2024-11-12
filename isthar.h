@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 
@@ -35,7 +36,7 @@ typedef unsigned int   u32;
 typedef unsigned long  u64;
 
 // size_t
-typedef u64 sizei;
+typedef size_t sizei;
 
 /// Typedefs 
 
@@ -1177,28 +1178,79 @@ class HashTable {
 
 ////////////////////////////////////////////////////////////////////
 
+/// ArenaAllocater functions
+template<typename T>
+T* default_alloc(const sizei count, const sizei element_size) {
+  return (T*)calloc(count, element_size);
+}
+
+template<typename T>
+void default_free(T* ptr) {
+  free(ptr); 
+}
+/// ArenaAllocater functions
+
 /// ArenaAllocater 
 template<typename T> 
 class ArenaAllocater {
-  public:
-    T* buffer             = nullptr;
-    sizei allocations     = 0;
-    sizei frees           = 0;
-    AllocFn<T> alloc_func = calloc;
-    FreeFn<T> free_func   = free; 
+  private:
+    T* m_buffer           = nullptr;
+    sizei m_element_size  = 0;
+    sizei m_max_allocs    = 0;
+    sizei m_total_alloc   = 0;
+    sizei m_total_free    = 0;
+    AllocFn<T> alloc_func = default_alloc;
+    FreeFn<T> free_func   = default_free; 
 
   public:
     ArenaAllocater()                       = default;
-    ArenaAllocater(const ArenaAllocater&&) = default;
+    ArenaAllocater(const ArenaAllocater&)  = default;
     ArenaAllocater(ArenaAllocater&&)       = default;
 
-    ArenaAllocater(const sizei count, const sizei element_size, const AllocFn<T>& alloc_fn = calloc, const FreeFn<T>& free_fn = free) {
+    ArenaAllocater(const sizei count, const sizei element_size, const AllocFn<T>& alloc_fn = default_alloc, const FreeFn<T>& free_fn = default_free) {
       alloc_func = alloc_fn; 
       free_func  = free_fn;
 
-      allocations = count;
+      m_element_size = element_size;
+      m_max_allocs   = count;
 
-      buffer = alloc_func(count, element_size);
+      m_buffer = alloc_func(count, element_size);
+      memset(m_buffer, 0, sizeof(count) * element_size);
+    }
+
+  public:
+    T* alloc() {
+      // Make sure there's enough memory
+      assert(m_total_alloc <= m_max_allocs);
+      
+      m_total_alloc++;
+
+      return &m_buffer[m_total_alloc - 1];
+    }
+
+    void free(T* ptr) {
+      // The given `ptr` needs to be valid
+      assert(ptr);
+
+      ptr = nullptr;
+
+      m_total_alloc--;
+      m_total_free++;
+    }
+
+    void clear() {
+      free_func(m_buffer);
+
+      m_total_alloc = 0;
+      m_total_free  = 0;
+    }
+
+    const sizei get_alloc_count() {
+      return m_total_alloc + m_total_free;
+    }
+
+    const sizei get_free_count() {
+      return m_total_free;
     }
 };
 /// ArenaAllocater 
