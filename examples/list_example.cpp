@@ -1,3 +1,4 @@
+#define ISHTAR_IMPL
 #include "isthar.h"
 
 #include <cstdio>
