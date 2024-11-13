@@ -4,6 +4,7 @@
 #include <cstdio>
 
 int main() {
+
   /// Create section
   printf("### CREATE ###\n");
   ishtar::String str1 = "hello";

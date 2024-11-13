@@ -10,7 +10,7 @@ struct Texture {
 };
 
 int main() {
-  ishtar::ArenaAllocater<Texture> texture_allocater(100, sizeof(Texture));
+  ishtar::ArenaAllocator<Texture> texture_allocater(100, sizeof(Texture));
 
   /// Alloc section 
   Texture* player_texture = texture_allocater.alloc();

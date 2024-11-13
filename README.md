@@ -19,13 +19,15 @@
 - Strings 
 - Hash tables 
 - Arena allocator
+- Extensive documentation
 
 # Upcoming Features
 - Smart pointers
+- Path string 
+- File system API
 - Searching algorithms (binary search, binary search tree, breadth-first search, depth-first search)
 - Sorting algorithms (quick sort, merge sort, bubble sort)
 - Trees (Binary, Quad, etc.)
-- Extensive documentation
 
 # How To Build? 
 *Ishtar* only has one header file and one translation unit (.cpp file). The only requirement is to add the following line of code before the `#include` directive in one `.cpp` file only _once_ in the whole project. 
