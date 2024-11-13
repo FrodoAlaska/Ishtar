@@ -1,3 +1,20 @@
+/// Ishtar v1.0 - A single-file suite of tools for C++.
+/// 
+/// To include the library in your project, copy this file (ishtar.h) into the directory where you usually 
+/// keep your libraries, make a new translation unit (ishtar.cpp, for example), use `#define ISHTAR_IMPL` before the include statement, 
+/// and make sure to compile that translation unit with your project. 
+/// 
+/// For example: 
+///
+/// ```c++
+/// #define ISHTAR_IMPL
+/// #include "ishtar.h"
+///
+/// // ... 
+/// ```
+/// 
+/// If you have any inquires or potential bugs, please contact me: https://frodoalaska.github.io/
+
 #pragma once
 
 #include <cassert>
