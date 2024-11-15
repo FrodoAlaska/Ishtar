@@ -1312,18 +1312,13 @@ const bool String::is_empty() {
 
 void String::append(const String& other) {
   data = (char*)realloc(data, sizeof(char) * (length + other.length));
-  memcpy(data + (sizeof(char) * length), other.data, other.length);
+  memcpy(data + length, other.data, other.length);
 
-  length += other.length;
+  length += (other.length + 1);
 }
 
 void String::append(const char* other) {
-  sizei other_len = string_length(other);
-
-  data = (char*)realloc(data, length + other_len);
-  memcpy(data + (sizeof(char) * length), other, other_len);
-
-  length += other_len;
+  append((String)other);
 }
 
 void String::append(const char& ch) {
